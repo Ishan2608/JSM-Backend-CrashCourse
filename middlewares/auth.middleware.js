@@ -9,7 +9,7 @@ export const authorize = async (req, res, next) =>{
             token = req.headers.authorization.split(" ")[1];
         }
 
-        if(!token) return res.status(401).json({ message: "Unauthorized", error: error.message });
+        if(!token) return res.status(401).json({ message: "Unauthorized", error: "No token provided" });
         const decoded = jwt.verify(token, JWT_SECRET);
 
         const user = await User.findById(decoded.userId);

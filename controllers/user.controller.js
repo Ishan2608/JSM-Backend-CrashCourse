@@ -2,7 +2,7 @@ import User from '../models/user.model.js';
 
 export const getUsers = async (req, res, next) => {
     try{
-        const users = await User.find();
+        const users = await User.find().select('-password');
         res.status(200).json({
             success: true, message: "Users found", data: users
         })
@@ -53,12 +53,12 @@ export const deleteUser = async (req, res, next) => {
     try{
         if(req.user.id !== req.params.id){
             const err = new Error("You are not the owner of this account");
-            err.status = 401;
+            err.statusCode = 401;
             throw err;
         }
         else{
-            const deleted = User.deleteOne({email: req.user.email});
-            return res.status(201).json({success: true, message: "User deleted", data: deleted});
+            const deleted = await User.deleteOne({email: req.user.email});
+            return res.status(200).json({success: true, message: "User deleted", data: deleted});
         }
     }
     catch(err){
