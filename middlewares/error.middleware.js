@@ -26,6 +26,7 @@ const errorMiddleware = (err, req, res, next) =>{
     catch(error){
         console.error(`Catch Block of errorMiddleware:\n${error}`)
     }
+    next();
 }
 
 export default errorMiddleware;
