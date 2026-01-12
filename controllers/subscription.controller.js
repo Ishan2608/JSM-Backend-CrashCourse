@@ -42,3 +42,117 @@ export const getAllSubscriptions = async (req, res, next) => {
         next(error)
     }
 }
+
+export const getSubscription = async (req, res, next) => {
+    try {
+        const subscription = await Subscription.findById(req.params.id);
+        if(!subscription){
+            const err = new Error("Subscription not found");
+            err.statusCode = 404;
+            throw err;
+        }
+        
+        if(subscription.user.toString() !== req.user._id.toString()){
+            const err = new Error("You are not the owner of this subscription");
+            err.statusCode = 401;
+            throw err;
+        }
+
+        return res.status(200).json({success: true, message: "Subscription fetched", data: subscription});
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const updateSubscription = async (req, res, next) => {
+    try {
+        let subscription = await Subscription.findById(req.params.id);
+        if(!subscription){
+            const err = new Error("Subscription not found");
+            err.statusCode = 404;
+            throw err;
+        }
+        
+        if(subscription.user.toString() !== req.user._id.toString()){
+            const err = new Error("You are not the owner of this subscription");
+            err.statusCode = 401;
+            throw err;
+        }
+
+        subscription = await Subscription.findByIdAndUpdate(req.params.id, req.body, {new: true, runValidators: true});
+        return res.status(200).json({success: true, message: "Subscription updated", data: subscription});
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const deleteSubscription = async (req, res, next) => {
+    try {
+        const subscription = await Subscription.findById(req.params.id);
+        if(!subscription){
+            const err = new Error("Subscription not found");
+            err.statusCode = 404;
+            throw err;
+        }
+        
+        if(subscription.user.toString() !== req.user._id.toString()){
+            const err = new Error("You are not the owner of this subscription");
+            err.statusCode = 401;
+            throw err;
+        }
+
+        await Subscription.findByIdAndDelete(req.params.id);
+        return res.status(200).json({success: true, message: "Subscription deleted"});
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const cancelSubscription = async (req, res, next) => {
+    try {
+        const subscription = await Subscription.findById(req.params.id);
+        if(!subscription){
+            const err = new Error("Subscription not found");
+            err.statusCode = 404;
+            throw err;
+        }
+        
+        if(subscription.user.toString() !== req.user._id.toString()){
+            const err = new Error("You are not the owner of this subscription");
+            err.statusCode = 401;
+            throw err;
+        }
+
+        if(subscription.status === 'cancelled'){
+            const err = new Error("Subscription is already cancelled");
+            err.statusCode = 400;
+            throw err;
+        }
+
+        subscription.status = 'cancelled';
+        await subscription.save();
+        return res.status(200).json({success: true, message: "Subscription cancelled", data: subscription});
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const getUpcomingRenewals = async (req, res, next) => {
+    try {
+        const today = new Date();
+        const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+        
+        const subscriptions = await Subscription.find({
+            user: req.user._id,
+            status: 'active',
+            renewalDate: {
+                $gte: today,
+                $lte: thirtyDaysFromNow
+            }
+        }).sort({renewalDate: 1});
+
+        return res.status(200).json({success: true, message: "Upcoming renewals fetched", data: subscriptions});
+    } catch (error) {
+        next(error);
+    }
+}
