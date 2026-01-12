@@ -44,30 +44,33 @@ export const signup = async (req, res, next) => {
     }
 }
 export const login = async (req, res, next) => {
-    // const session = await mongoose.startSession();
-    // session.startTransaction();
-
-    // try{
-
-    //     await session.commitTransaction();
-    // }
-    // catch (err){
-    //     await session.abortTransaction();
-    //     session.endSession();
-    //     next(err)
-    // }
+    try{
+        const {email, password} = req.body;
+        const user = await User.findOne({email});
+        if(!user){
+            const err = new Error("User not Found");
+            err.statusCode = 404;
+            throw err;
+        }
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if(!isPasswordValid){
+            const err = new Error("Invalid Password");
+            err.statusCode = 404;
+            throw err;
+        }
+        const token = jwt.sign({userId: user._id}, JWT_SECRET, {expiresIn: JWT_EXPIRES_IN});
+        res.status(200).json({
+            success: true,
+            message: 'user signed in successfully',
+            data: {
+                token, user
+            }
+        });
+    }
+    catch(err){
+        next(err)
+    }
 }
 export const logout = async (req, res, next) => {
-    // const session = await mongoose.startSession();
-    // session.startTransaction();
-
-    // try{
-
-    //     await session.commitTransaction();
-    // }
-    // catch (err){
-    //     await session.abortTransaction();
-    //     session.endSession();
-    //     next(err)
-    // }
+    
 }
