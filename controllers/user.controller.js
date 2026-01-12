@@ -27,16 +27,17 @@ export const getUser = async (req, res, next) => {
     }
 }
 
-export const createUser = async (req, res, next) => {}
-
 export const updateUser = async (req, res, next) => {
     try{
-        const user = await User.findById(req.params.id).select('-password');
-        if(!user){
-            const err = new Error("User not Found");
-            err.statusCode = 404;
+        if(req.user.id !== req.params.id){
+            const err = new Error("You are not the owner of this account");
+            err.status = 401;
             throw err;
         }
+        else{
+            console.log("UPDATE here");
+        }
+        
     }
     catch(err){
         next(err);
@@ -45,11 +46,14 @@ export const updateUser = async (req, res, next) => {
 
 export const deleteUser = async (req, res, next) => {
     try{
-        const user = await User.findById(req.params.id).select('-password');
-        if(!user){
-            const err = new Error("User not Found");
-            err.statusCode = 404;
+        if(req.user.id !== req.params.id){
+            const err = new Error("You are not the owner of this account");
+            err.status = 401;
             throw err;
+        }
+        else{
+            const deleted = User.deleteOne({email: req.user.email});
+            return res.status(201).json({success: true, message: "User deleted", data: deleted});
         }
     }
     catch(err){
