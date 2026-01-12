@@ -45,7 +45,7 @@ const subscriptionSchema = mongoose.Schema({
     },
     renewalDate:{
         type: Date,
-        required: true,
+        // required: true,
         validate: {
             validator: function (value) { return value > this.startDate; },
             message: "Renewal date must be in the future."
@@ -60,7 +60,7 @@ const subscriptionSchema = mongoose.Schema({
 }, { timestamps: true });
 
 // autocalculate re-newal date if missing
-subscriptionSchema.pre('save', function (next){
+subscriptionSchema.pre('save', function (){
     if(!this.renewalDate){
         const renewalPeriod = {
             daily: 1,
@@ -68,15 +68,13 @@ subscriptionSchema.pre('save', function (next){
             monthly: 30,
             yearly: 365,
         }
-        this.renewalDate = new Data(this.startDate);
+        this.renewalDate = new Date(this.startDate);
         this.renewalDate.setDate(this.renewalDate.getDate() + renewalPeriod[this.frequency]);
     }
 
     if (this.renewalDate < new Date()){
         this.status = 'expired';
     }
-
-    next();
 });
 
 const Subscription = mongoose.model('Subscription', subscriptionSchema);
